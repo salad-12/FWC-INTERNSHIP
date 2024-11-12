@@ -1,0 +1,72 @@
+#include <WiFi.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
+
+#ifndef STASSID
+#define STASSID "gvv"  // Replace with your network credentials
+#define STAPSK  "abcd"
+#endif
+
+const char* ssid = STASSID;
+const char* password = STAPSK;
+
+// Define input pins for D3, D2, D1, D0
+const int D3_pin = 14;  // GPIO14 for D3
+const int D2_pin = 12;  // GPIO12 for D2
+const int D1_pin = 13;  // GPIO13 for D1
+const int D0_pin = 15;  // GPIO15 for D0
+
+// Define output pins for A and B
+const int A_pin = 2;    // GPIO2 for output A
+const int B_pin = 4;    // GPIO4 for output B
+
+void OTAsetup() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    delay(5000);
+    ESP.restart();
+  }
+  ArduinoOTA.begin();
+}
+
+void OTAloop() {
+  ArduinoOTA.handle();
+}
+
+void setup() {
+  OTAsetup();
+
+  // Set pin modes for inputs and outputs
+  pinMode(D3_pin, INPUT);
+  pinMode(D2_pin, INPUT);
+  pinMode(D1_pin, INPUT);
+  pinMode(D0_pin, INPUT);
+  
+  pinMode(A_pin, OUTPUT);
+  pinMode(B_pin, OUTPUT);
+
+  //-------------------//
+  // Custom setup code //
+  //-------------------//
+}
+
+void loop() {
+  OTAloop();
+  
+  // Read the input values
+  int D3 = digitalRead(D3_pin);
+  int D2 = digitalRead(D2_pin);
+  int D1 = digitalRead(D1_pin);
+  int D0 = digitalRead(D0_pin);  // This won't be used, but included for completeness
+
+  // Implement the logic for A and B
+  int A = D3 || D2;  // A = D3 + D2
+  int B = (D3 && !D2) || D1;  // B = D3 * ~D2 + D1
+
+  // Write the outputs to the respective pins
+  digitalWrite(A_pin, A);
+  digitalWrite(B_pin, B);
+
+  delay(100);  // If no custom loop code ensure to have a delay in loop
+}
